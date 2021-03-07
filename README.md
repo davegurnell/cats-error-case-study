@@ -4,20 +4,75 @@ Copyright 2021 Dave Gurnell.
 
 Licensed [Apache 2](http://www.apache.org/licenses/LICENSE-2.0.html).
 
+## Overview
+
+This workshop involves working with an app for querying GeoJSON
+datasets on [Cartographer](https://cartographer.io).
+
+The starting point is a simple command line tool for fetching GeoJSON data
+from two datasets of river monitoring data:
+
+- `"morph"` - a dataset of habitat observations;
+- `"riverfly"` - a dataset of microinvertibrate samples.
+
+The content of the datasets isn't important but the structure is.
+You can see the structure of the data yourself by running a query:
+
+```bash
+sbt run search morph    # fetch the "morph" dataset
+sbt run search riverfly # fetch the "riverfly" dataset
+```
+
+You can also fetch the size of each dataset:
+
+```bash
+sbt run count morph    # fetch the "morph" dataset
+sbt run count riverfly # fetch the "riverfly" dataset
+```
+
+We'll be adding to this app in two ways:
+We'll start by add some parameters to the "start" and "count" commands.
+Then we'll add some additional commands to parse the returned data.
+
+Each exercise will involve fail-fast error handling using `Either`
+together with a few useful combinators:
+
+- From the standard library:
+  - `map`
+  - `flatMap`
+- From Cats:
+  - `mapN`
+  - `tupled`
+  - `sequence`
+  - `traverse`
+
+The final exercise, which is a bit harder, switches to
+cumulative error handling using the `EitherNel` and `EitherNec` data types
+and the following additional methods from Cats:
+
+- `parMapN`
+- `parTupled`
+- `parSequence`
+- `parTraverse`
+
 ## Adding a Bounding Box
 
 Extend the search and count commands so they take two extra parameters
 representing a bounding box:
 
 ```
+
 sbt run search <layerId> <swGps> <neGps>
+
 ```
 
 `swGps` and `neGps` should be GPS positions specified as `x,y` positions.
 For example, the following would query a box centered roughly on London:
 
 ```
+
 sbt run search morph -1,49 1,51
+
 ```
 
 If either GPS position is invalid, fail with an invormative error message.
