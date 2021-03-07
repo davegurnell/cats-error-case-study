@@ -2,6 +2,7 @@ package code
 
 import java.time._
 
+import cats.data.{EitherNel, NonEmptyList}
 import sttp.client3.quick._
 import sttp.client3.playJson._
 import play.api.libs.functional.syntax._
@@ -23,7 +24,7 @@ object MapApi {
       layerId: LayerId,
       bounds: Option[Box] = None,
       dates: Option[DateRange] = None
-  ): Either[String, FeatureCollection] = {
+  ): EitherNel[String, FeatureCollection] = {
     val uri = uri"https://api.cartographer.io/v1/map/${layerId.underlyingId}"
       .addParam("sw", bounds.map(_.sw.stringify))
       .addParam("ne", bounds.map(_.ne.stringify))
@@ -35,6 +36,6 @@ object MapApi {
       .response(asJson[FeatureCollection])
       .send(backend)
 
-    response.body.left.map(_.getMessage)
+    response.body.left.map(exn => NonEmptyList.of(exn.getMessage))
   }
 }

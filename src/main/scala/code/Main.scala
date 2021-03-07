@@ -1,9 +1,11 @@
 package code
 
+import cats.data.{EitherNel, NonEmptyList}
 import cats.implicits._
 import java.time._
 import play.api.libs.json._
 import sttp.client3.quick._
+import unindent._
 
 object Main {
   def main(args: Array[String]): Unit =
@@ -17,85 +19,95 @@ object Main {
         case "total" :: layerId :: propId :: sw :: ne :: Nil   => total(layerId, propId, Some(sw), Some(ne))
         case "average" :: layerId :: propId :: Nil             => average(layerId, propId, None, None)
         case "average" :: layerId :: propId :: sw :: ne :: Nil => average(layerId, propId, Some(sw), Some(ne))
-        case _                                                 => Left("Wrong number of parameters")
+        case _                                                 => Left(NonEmptyList.of("Command not found or wrong number of parameters"))
       }
     }
 
-  def search(layerId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  def search(layerId: String, sw: Option[String], ne: Option[String]): EitherNel[String, String] =
     for {
-      layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
+      params <- parseParams(layerId, sw, ne)
+      (layerId, bounds) = params
       coll <- MapApi.query(layerId, bounds)
     } yield coll.show
 
-  def count(layerId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  def count(layerId: String, sw: Option[String], ne: Option[String]): EitherNel[String, String] =
     for {
-      layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
+      params <- parseParams(layerId, sw, ne)
+      (layerId, bounds) = params
       coll <- MapApi.query(layerId, bounds)
     } yield coll.features.length.toString
 
-  def total(layerId: String, propId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  def total(layerId: String, propId: String, sw: Option[String], ne: Option[String]): EitherNel[String, String] =
     for {
-      layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
+      params <- parseParams(layerId, sw, ne)
+      (layerId, bounds) = params
       coll <- MapApi.query(layerId, bounds)
-      props <- coll.features.traverse(_.propAs[Double](propId))
+      props <- coll.features.parTraverse(_.propAs[Double](propId))
     } yield props.sum.show
 
-  def average(layerId: String, propId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  def average(layerId: String, propId: String, sw: Option[String], ne: Option[String]): EitherNel[String, String] =
     for {
-      layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
+      params <- parseParams(layerId, sw, ne)
+      (layerId, bounds) = params
       coll <- MapApi.query(layerId, bounds)
-      props <- coll.features.traverse(_.propAs[Double](propId))
+      props <- coll.features.parTraverse(_.propAs[Double](propId))
     } yield (props.sum / props.length).show
 
-  def parseLayerId(id: String): Either[String, LayerId] =
-    LayerId.values.find(_.id == id).toRight("Layer ID not found")
+  def parseParams(layerId: String, sw: Option[String], ne: Option[String]): EitherNel[String, (LayerId, Option[Box])] =
+    (parseLayerId(layerId), parseOptBounds(sw, ne)).parTupled
 
-  def parseBounds(sw: String, ne: String): Either[String, Box] =
-    (parsePoint(sw), parsePoint(ne)).mapN(Box)
+  def parseLayerId(layerId: String): EitherNel[String, LayerId] =
+    LayerId.values.find(_.id == layerId).toRight(NonEmptyList.of(s"Layer not found: $layerId"))
 
-  def parsePoint(gps: String): Either[String, Point] =
+  def parseOptBounds(sw: Option[String], ne: Option[String]): EitherNel[String, Option[Box]] =
+    (sw, ne).mapN(parseBounds).sequence
+
+  def parseBounds(sw: String, ne: String): EitherNel[String, Box] =
+    (parsePoint(sw), parsePoint(ne)).parMapN(Box)
+
+  def parsePoint(gps: String): EitherNel[String, Point] =
     gps.split(",").toList match {
       case x :: y :: Nil =>
         (
-          x.toDoubleOption.toRight(s"Invalid longitude: $x"),
-          y.toDoubleOption.toRight(s"Invalid latitude: $x")
+          x.toDoubleOption.toRight(NonEmptyList.of(s"Invalid longitude: $x")),
+          y.toDoubleOption.toRight(NonEmptyList.of(s"Invalid latitude: $y"))
         ).mapN(Point(_, _))
 
       case _ =>
-        Left(s"Invalid GPS: $gps")
+        Left(NonEmptyList.of(s"Invalid GPS: $gps"))
     }
 
-  def printOutput(output: Either[String, String]): Unit =
+  def printOutput(output: EitherNel[String, String]): Unit =
     println {
       output match {
         case Right(output) =>
           output
 
-        case Left(error) =>
-          s"""
-          |$error
-          |
-          |Usage:
-          |
-          |  sbt run search  <layerId>          [sw ne]
-          |  sbt run count   <layerId>          [sw ne]
-          |  sbt run total   <layerId> <propId> [sw ne]
-          |  sbt run average <layerId> <propId> [sw ne]
-          |
-          |Where:
-          |  layerId is a layer ID: ${LayerId.values.map(_.id).mkString(" or ")}
-          |  propId is a property ID (an arbitrary string)
-          |  sw,ne are GPS positions in the form "longitude,latitude"
-          |
-          |Examples:
-          |
-          |   sbt run riverfly
-          |   sbt run morph -1.49 1,51
-          """.trim.stripMargin
+        case Left(errors) =>
+          i"""
+          Oh no! One or more things went wrong!
+
+          ${errors.toList.mkString("\n")}
+
+          Usage:
+
+            sbt run search  <layerId>          [<sw> <ne>]
+            sbt run count   <layerId>          [<sw> <ne>]
+            sbt run total   <layerId> <propId> [<sw> <ne>]
+            sbt run average <layerId> <propId> [<sw> <ne>]
+
+          Where:
+
+            <layerId> is a layer ID: ${LayerId.values.map(_.id).mkString(" or ")}
+            <propId> is a property ID (an arbitrary string)
+            <sw> and <ne> are GPS positions of the form "longitude,latitude"
+
+          Examples:
+
+             sbt run riverfly
+             sbt count morph -1.49 1,51
+             sbt average morph index8 -1.49 1,51
+          """
       }
     }
 }

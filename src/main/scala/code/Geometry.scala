@@ -1,11 +1,13 @@
 package code
 
 import cats.Show
+import cats.data.EitherNel
 import cats.implicits._
 import code.syntax._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import unindent._
+import cats.data.NonEmptyList
 
 case class Point(x: Double, y: Double) {
   def toPair: (Double, Double) =
@@ -33,11 +35,11 @@ object Point {
 case class Box(sw: Point, ne: Point)
 
 case class Feature(id: Option[String], geometry: Point, properties: Map[String, JsValue]) {
-  def prop(name: String): Either[String, JsValue] =
-    properties.get(name).toRight(s"Property not found: ${name}")
+  def prop(name: String): EitherNel[String, JsValue] =
+    properties.get(name).toRight(NonEmptyList.of(s"Property not found: ${name}"))
 
-  def propAs[A: Reads](name: String): Either[String, A] =
-    prop(name).flatMap(_.validate[A].asOpt.toRight(s"Property was not the correct type: $name"))
+  def propAs[A: Reads](name: String): EitherNel[String, A] =
+    prop(name).flatMap(_.validate[A].asOpt.toRight(NonEmptyList.of(s"Property was not the correct type: $name")))
 }
 
 object Feature {
