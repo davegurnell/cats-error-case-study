@@ -40,24 +40,18 @@ object Main {
 
         case Left(error) =>
           s"""
+          |Oh no! Something went wrong!
+          |
           |$error
           |
           |Usage:
           |
-          |  sbt run search  <layerId>          [sw ne]
-          |  sbt run count   <layerId>          [sw ne]
-          |  sbt run total   <layerId> <propId> [sw ne]
-          |  sbt run average <layerId> <propId> [sw ne]
+          |sbt run search <layerId>
+          |sbt run count <layerId>
           |
           |Where:
-          |  layerId is a layer ID: ${LayerId.values.map(_.id).mkString(" or ")}
-          |  propId is a property ID (an arbitrary string)
-          |  sw,ne are GPS positions in the form "longitude,latitude"
           |
-          |Examples:
-          |
-          |   sbt run riverfly
-          |   sbt run morph -1.49 1,51
+          |<layerId> is one of ${LayerId.values.map(_.id).mkString(" or ")}
           """.trim.stripMargin
       }
     }

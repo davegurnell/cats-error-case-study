@@ -204,3 +204,85 @@ class Feature {
     ???
 }
 ```
+
+## Cumulative Error Reporting (Optional)
+
+Modify your code so that, instead of reporting the first error to go wrong, it reports all the errors it can at any one time:
+
+- If it can't parse the command line arguments, report all parsing errors.
+- If it can't sum/average the query results, report all result parsing errors.
+
+### Tips
+
+**Step 1**
+
+Start by modifying the `printOutput` method to expect a list of error messages:
+
+```scala
+def printOutput(output: Either[List[String], String]): Unit =
+  ???
+```
+
+Chase the compilation errors through your code, changing all errors to lists.
+
+**Step 2**
+
+Look for places where you can swap fail-fast error handling
+for cumulative error handling:
+
+- calls to `mapN` can be replaced with `parMapN`;
+- calls to `tupled` can be replaced with `parTupled`;
+- calls to `sequence` can be replaced with `parSequence`;
+- calls to `traverse` can be replaced with `parTraverse`.
+
+Also look for places where you have written `for` comprehensions
+where all the generators are independent of one another.
+These can be converted to calls to `mapN`, which can in turn be replaced with `parMapN`:
+
+```scala
+// As long as `expr1` and `expr2` don't refer to one another,
+// this for comprehension can be rewritten using `mapN`:
+
+for {
+  x <- expr1
+  y <- expr2
+} yield x + y
+
+// The equivalent call to mapN is as follows:
+
+(expr1, expr2).parMapN(_ + _)
+```
+
+**Step 3**
+
+It's common to use a non-empty sequence type on the left of an `Either`
+to avoid accidentally returning an empty list of errors.
+
+Cats provides threww non-empty sequence types.
+Two are thin wrappers around counterpart from the standard libraryl
+the third wraps `cats.data.Chain`, a data type with fast prepend and append operations:
+
+```scala
+// Use any of these:
+import cats.data.NonEmptyList   // a thin wrapper around List
+import cats.data.NonEmptyVector // a thin wrapper around Vector
+import cats.data.NonEmptyChain  // a thin wrapper around cats.data.Chain
+```
+
+Convert your code to use one of these sequence types to hold errors:
+
+```scala
+type Result[A] = Either[NonEmptyList[String], A] // or
+type Result[A] = Either[NonEmptyChain[String], A]
+```
+
+If you decide to use `NonEmptyList` or `NonEmptyChain,
+you can optionally use the following type aliases provided by Cats:
+
+```scala
+import cats.data.EitherNel
+import cats.data.EitherNec
+
+type Result[A] = EitherNel[String, A] // or
+type Result[A] = EitherNec[String, A]
+```
