@@ -24,7 +24,7 @@ object MapApi {
       bounds: Option[Box] = None,
       dates: Option[DateRange] = None
   ): Either[String, FeatureCollection] = {
-    val uri = uri"https://api.cartographer.io/v1/map/${layerId.underlyingId}"
+    val uri = uri"https://api.beta.cartographer.io/v1/map/${layerId.underlyingId}"
       .addParam("sw", bounds.map(_.sw.stringify))
       .addParam("ne", bounds.map(_.ne.stringify))
       .addParam("from", dates.map(_.from.stringify))
