@@ -1,6 +1,109 @@
 # Cats Error Handling Workshop
 
-## Total and Average
+## Adding a Bounding Box
+
+Extend the search and count commands so they take two extra parameters
+representing a bounding box:
+
+```
+sbt run search <layerId> <swGps> <neGps>
+```
+
+`swGps` and `neGps` should be GPS positions specified as `x,y` positions.
+For example, the following would query a box centered roughly on London:
+
+```
+sbt run search morph -1,49 1,51
+```
+
+If either GPS position is invalid, fail with an invormative error message.
+
+### Tips
+
+Do the exercise in several steps:
+
+**Step 1**
+
+Start by creating a method `parsePoint` to parse an `x,y` string as a `Point`:
+
+```scala
+def parsePoint(string: String): Either[String, Point] =
+  ???
+```
+
+You may find the following snippets of code useful:
+
+```scala
+// Split a String to a list of substrings:
+string.split(",").toList // => List[String]
+
+// Safely convert a String to a Double:
+string.toDoubleOption.toRight("Error") // => Either[String, Double]
+
+// Create a Point from an x and a y:
+Point(double, double)
+```
+
+You'll need to find a way to combine the `Either[String, Double]`
+values to create your point. You can either use a `for` comprehension
+or look to Cats for a more convenient method.
+
+**Step 2**
+
+Now create a second method, `parseBounds`, that takes two GPS strings
+as parameters. The method should call `parsePoint` twice, once for each corner,
+and combines the results to create a `Box`:
+
+```scala
+/**
+ * The first parameter represents the South West (bottom left) corner;
+ * The second parameter represents the North East (top right) corner.
+ */
+def parseBounds(sw: String, ne: String): Either[String, Box] =
+  ???
+```
+
+The code to combine the `Either[String, Point]` values in `parseBounds`
+will be similar to the code to combine `Either[String, Double]` values in `parsePoint`.
+
+**Step 3**
+
+Once you have `parsePoint` and `parseBounds`,
+add additional parameters to `search` and `count`
+to receive the parsed `Points`:
+
+```scala
+def search(layerId: String, sw: String, ne: String): Either[String, String] =
+  ???
+
+def count(layerId: String, sw: String, ne: String): Either[String, String] =
+  ???
+```
+
+In each case create a `Box` from the new strings and pass it as an additional parameter to `MapApi.query`.
+
+**Step 4**
+
+Finally, modify the pattern match in `main`
+to read and pass in the extra parameters:
+
+```scala
+def main(args: Array[String]): Unit =
+  printOutput {
+    args.toList match {
+      case "search" :: layerId :: sw :: ne :: Nil =>
+        search(layerId, sw, ne)
+
+      case "count"  :: layerId :: sw :: ne :: Nil =>
+        count(layerId, sw, ne)
+
+      case _ =>
+        Left("Wrong number of parameters")
+    }
+  }
+```
+
+## Total and Average Commands
 
 Implement two new commands:
 
@@ -24,20 +127,12 @@ Place these along-side the definitions of `search` and `count`:
 
 ```scala
 
-def total(
-  layerId: String,
-  propId: String,
-  sw: Option[String],
-  ne: Option[String]
-): Either[String, String] =
+def total(layerId: String, propId: String,
+    sw: Option[String], ne: Option[String]): Either[String, String] =
   ???
 
-def average(
-  layerId: String,
-  propId: String,
-  sw: Option[String],
-  ne: Option[String]
-): Either[String, String] =
+def average(layerId: String, propId: String,
+    sw: Option[String], ne: Option[String]): Either[String, String] =
   ???
 ```
 

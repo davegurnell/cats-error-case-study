@@ -17,37 +17,20 @@ object Main {
       }
     }
 
-  def search(layerId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  def search(layerId: String): Either[String, String] =
     for {
       layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
-      coll <- MapApi.query(layerId, bounds)
+      coll <- MapApi.query(layerId)
     } yield coll.show
 
-  def count(layerId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  def count(layerId: String): Either[String, String] =
     for {
       layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
-      coll <- MapApi.query(layerId, bounds)
+      coll <- MapApi.query(layerId)
     } yield coll.features.length.toString
 
   def parseLayerId(id: String): Either[String, LayerId] =
     LayerId.values.find(_.id == id).toRight("Layer ID not found")
-
-  def parseBounds(sw: String, ne: String): Either[String, Box] =
-    (parsePoint(sw), parsePoint(ne)).mapN(Box)
-
-  def parsePoint(gps: String): Either[String, Point] =
-    gps.split(",").toList match {
-      case x :: y :: Nil =>
-        (
-          x.toDoubleOption.toRight(s"Invalid longitude: $x"),
-          y.toDoubleOption.toRight(s"Invalid latitude: $x")
-        ).mapN(Point(_, _))
-
-      case _ =>
-        Left(s"Invalid GPS: $gps")
-    }
 
   def printOutput(output: Either[String, String]): Unit =
     println {
