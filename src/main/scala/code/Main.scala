@@ -9,15 +9,11 @@ object Main {
   def main(args: Array[String]): Unit =
     printOutput {
       args.toList match {
-        case "search" :: layerId :: Nil                        => search(layerId, None, None)
-        case "search" :: layerId :: sw :: ne :: Nil            => search(layerId, Some(sw), Some(ne))
-        case "count" :: layerId :: Nil                         => count(layerId, None, None)
-        case "count" :: layerId :: sw :: ne :: Nil             => count(layerId, Some(sw), Some(ne))
-        case "total" :: layerId :: propId :: Nil               => total(layerId, propId, None, None)
-        case "total" :: layerId :: propId :: sw :: ne :: Nil   => total(layerId, propId, Some(sw), Some(ne))
-        case "average" :: layerId :: propId :: Nil             => average(layerId, propId, None, None)
-        case "average" :: layerId :: propId :: sw :: ne :: Nil => average(layerId, propId, Some(sw), Some(ne))
-        case _                                                 => Left("Wrong number of parameters")
+        case "search" :: layerId :: Nil             => search(layerId, None, None)
+        case "search" :: layerId :: sw :: ne :: Nil => search(layerId, Some(sw), Some(ne))
+        case "count" :: layerId :: Nil              => count(layerId, None, None)
+        case "count" :: layerId :: sw :: ne :: Nil  => count(layerId, Some(sw), Some(ne))
+        case _                                      => Left("Wrong number of parameters")
       }
     }
 
@@ -34,22 +30,6 @@ object Main {
       bounds <- (sw, ne).mapN(parseBounds).sequence
       coll <- MapApi.query(layerId, bounds)
     } yield coll.features.length.toString
-
-  def total(layerId: String, propId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
-    for {
-      layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
-      coll <- MapApi.query(layerId, bounds)
-      props <- coll.features.traverse(_.propAs[Double](propId))
-    } yield props.sum.show
-
-  def average(layerId: String, propId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
-    for {
-      layerId <- parseLayerId(layerId)
-      bounds <- (sw, ne).mapN(parseBounds).sequence
-      coll <- MapApi.query(layerId, bounds)
-      props <- coll.features.traverse(_.propAs[Double](propId))
-    } yield (props.sum / props.length).show
 
   def parseLayerId(id: String): Either[String, LayerId] =
     LayerId.values.find(_.id == id).toRight("Layer ID not found")
