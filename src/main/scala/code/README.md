@@ -103,6 +103,45 @@ def main(args: Array[String]): Unit =
   }
 ```
 
+## Make the Bounds Parameters Optional
+
+Modify your `main` method so it can parse bounds and no-bounds
+variants of each command:
+
+```scala
+def main(args: Array[String]): Unit =
+  printOutput {
+    args.toList match {
+      case "search" :: layerId :: Nil =>
+        search(layerId, None, None)
+      case "count"  :: layerId :: Nil =>
+        count(layerId, None, None)
+
+      case "search" :: layerId :: sw :: ne :: Nil =>
+        search(layerId, Some(sw), Some(ne))
+      case "count"  :: layerId :: sw :: ne :: Nil =>
+        count(layerId, Some(sw), Some(ne))
+
+      case _ =>
+        Left("Wrong number of parameters")
+    }
+  }
+```
+
+Modify your definitions of `search` and `count` to make the bounds parameters `Options`:
+
+```scala
+def search(layerId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  ???
+
+def count(layerId: String, sw: Option[String], ne: Option[String]): Either[String, String] =
+  ???
+```
+
+Chase through the changes to the types.
+Find the minimum code you need to fix the type errors.
+Methods from Cats will come in exceptionally useful here!
+
 ## Total and Average Commands
 
 Implement two new commands:
