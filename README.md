@@ -19,15 +19,15 @@ The content of the datasets isn't important but the structure is.
 You can see the structure of the data yourself by running a query:
 
 ```bash
-sbt run search morph    # fetch the "morph" dataset
-sbt run search riverfly # fetch the "riverfly" dataset
+sbt 'run search morph'    # fetch the "morph" dataset
+sbt 'run search riverfly' # fetch the "riverfly" dataset
 ```
 
 You can also fetch the size of each dataset:
 
 ```bash
-sbt run count morph    # fetch the "morph" dataset
-sbt run count riverfly # fetch the "riverfly" dataset
+sbt 'run count morph'    # fetch the "morph" dataset
+sbt 'run count riverfly' # fetch the "riverfly" dataset
 ```
 
 We'll be adding to this app in two ways:

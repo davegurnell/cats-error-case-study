@@ -9,11 +9,9 @@ object Main {
   def main(args: Array[String]): Unit =
     printOutput {
       args.toList match {
-        case "search" :: layerId :: Nil             => search(layerId, None, None)
-        case "search" :: layerId :: sw :: ne :: Nil => search(layerId, Some(sw), Some(ne))
-        case "count" :: layerId :: Nil              => count(layerId, None, None)
-        case "count" :: layerId :: sw :: ne :: Nil  => count(layerId, Some(sw), Some(ne))
-        case _                                      => Left("Wrong number of parameters")
+        case "search" :: layerId :: Nil => search(layerId)
+        case "count" :: layerId :: Nil  => count(layerId)
+        case _                          => Left("Wrong number of parameters")
       }
     }
 
