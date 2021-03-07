@@ -1,5 +1,9 @@
 # Cats Error Handling Workshop
 
+Copyright 2021 Dave Gurnell.
+
+Licensed [Apache 2](http://www.apache.org/licenses/LICENSE-2.0.html).
+
 ## Adding a Bounding Box
 
 Extend the search and count commands so they take two extra parameters
