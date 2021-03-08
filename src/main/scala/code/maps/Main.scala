@@ -42,8 +42,8 @@ object Main {
 
           Usage:
 
-          sbt run search <layerId>
-          sbt run count <layerId>
+          sbt 'run search <layerId>'
+          sbt 'run count <layerId>'
 
           Where:
 

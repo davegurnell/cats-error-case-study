@@ -1,5 +1,7 @@
 # Cats Error Handling Workshop
 
+https://github.com/davegurnell/cats-error-case-study
+
 Copyright 2021 Dave Gurnell.
 
 Licensed [Apache 2](http://www.apache.org/licenses/LICENSE-2.0.html).
