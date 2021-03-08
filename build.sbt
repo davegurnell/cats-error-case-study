@@ -5,5 +5,6 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "core" % "3.1.7",
   "com.softwaremill.sttp.client3" %% "play-json" % "3.1.7",
   "com.typesafe.play" %% "play-json" % "2.9.2",
-  "org.typelevel" %% "cats-core" % "2.2.0"
+  "org.scalatest" %% "scalatest" % "3.0.8" % Test,
+  "org.typelevel" %% "cats-core" % "2.2.0",
 )

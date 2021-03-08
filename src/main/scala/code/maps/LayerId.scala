@@ -1,4 +1,4 @@
-package code
+package code.maps
 
 sealed abstract class LayerId(val id: String, val underlyingId: String) extends Product with Serializable
 

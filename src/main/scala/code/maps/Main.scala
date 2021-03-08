@@ -1,17 +1,15 @@
-package code
+package code.maps
 
 import cats.implicits._
-import java.time._
-import play.api.libs.json._
-import sttp.client3.quick._
+import unindent._
 
 object Main {
   def main(args: Array[String]): Unit =
     printOutput {
       args.toList match {
         case "search" :: layerId :: Nil => search(layerId)
-        case "count" :: layerId :: Nil  => count(layerId)
-        case _                          => Left("Wrong number of parameters")
+        case "count" :: layerId :: Nil => count(layerId)
+        case _ => Left("Wrong number of parameters")
       }
     }
 
@@ -37,19 +35,19 @@ object Main {
           output
 
         case Left(error) =>
-          s"""
-          |Oh no! Something went wrong!
-          |
-          |$error
-          |
-          |Usage:
-          |
-          |sbt run search <layerId>
-          |sbt run count <layerId>
-          |
-          |Where:
-          |
-          |<layerId> is one of ${LayerId.values.map(_.id).mkString(" or ")}
+          i"""
+          Oh no! Something went wrong!
+
+          $error
+
+          Usage:
+
+          sbt run search
+          sbt run count
+
+          Where:
+
+          <layerId> is one of ${LayerId.values.map(_.id).mkString(" or ")}
           """.trim.stripMargin
       }
     }

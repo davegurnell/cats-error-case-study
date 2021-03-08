@@ -1,11 +1,10 @@
-package code
+package code.maps
+
+import code.maps.geom.{Box, FeatureCollection}
+import sttp.client3.playJson._
+import sttp.client3.quick._
 
 import java.time._
-
-import sttp.client3.quick._
-import sttp.client3.playJson._
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
 
 case class DateRange(from: LocalDate, to: LocalDate)
 
